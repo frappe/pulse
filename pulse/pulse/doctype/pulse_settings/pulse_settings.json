@@ -7,6 +7,7 @@
  "field_order": [
   "api_key",
   "rate_limit",
+  "ingest_mode",
   "max_stream_length",
   "anon_salt",
   "anon_salt_day"
@@ -23,6 +24,14 @@
    "fieldname": "rate_limit",
    "fieldtype": "Int",
    "label": "Rate Limit"
+  },
+  {
+   "default": "Direct",
+   "description": "Direct stores events in the database during the ingest request. Redis Stream is the legacy path, kept for rollback.",
+   "fieldname": "ingest_mode",
+   "fieldtype": "Select",
+   "label": "Ingest Mode",
+   "options": "Direct\nRedis Stream"
   },
   {
    "fieldname": "max_stream_length",
@@ -50,7 +59,7 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-06-29 00:00:00.000000",
+ "modified": "2026-09-16 00:00:00.000000",
  "modified_by": "Administrator",
  "module": "Pulse",
  "name": "Pulse Settings",

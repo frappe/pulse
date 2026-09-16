@@ -5,22 +5,60 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
-  "day",
+  "hour",
+  "requests",
+  "failed_requests",
+  "retries",
+  "column_break_counts",
   "accepted",
   "dropped",
   "rejected",
-  "total"
+  "section_break_request",
+  "request_p50_ms",
+  "request_p95_ms",
+  "request_max_ms",
+  "section_break_insert",
+  "insert_p50_ms",
+  "insert_p95_ms",
+  "insert_max_ms"
  ],
  "fields": [
   {
-   "fieldname": "day",
-   "fieldtype": "Data",
+   "fieldname": "hour",
+   "fieldtype": "Datetime",
    "in_list_view": 1,
-   "label": "Day",
+   "label": "Hour",
    "read_only": 1
   },
   {
-   "description": "Events staged for storage.",
+   "description": "Ingest requests received.",
+   "fieldname": "requests",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Requests",
+   "read_only": 1
+  },
+  {
+   "description": "Requests that ended in an error, such as a 503.",
+   "fieldname": "failed_requests",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Failed Requests",
+   "read_only": 1
+  },
+  {
+   "description": "Inserts retried within a request.",
+   "fieldname": "retries",
+   "fieldtype": "Int",
+   "label": "Retries",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_counts",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Events stored.",
    "fieldname": "accepted",
    "fieldtype": "Int",
    "in_list_view": 1,
@@ -44,18 +82,67 @@
    "read_only": 1
   },
   {
-   "fieldname": "total",
-   "fieldtype": "Int",
-   "in_list_view": 1,
-   "label": "Total Received",
+   "fieldname": "section_break_request",
+   "fieldtype": "Section Break",
+   "label": "Request Duration"
+  },
+  {
+   "description": "Upper bound of the duration bucket holding this rank, capped at the maximum.",
+   "fieldname": "request_p50_ms",
+   "fieldtype": "Float",
+   "label": "Request p50 (ms)",
+   "non_negative": 1,
+   "read_only": 1
+  },
+  {
+   "description": "Upper bound of the duration bucket holding this rank, capped at the maximum.",
+   "fieldname": "request_p95_ms",
+   "fieldtype": "Float",
+   "label": "Request p95 (ms)",
+   "non_negative": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "request_max_ms",
+   "fieldtype": "Float",
+   "label": "Request Max (ms)",
+   "non_negative": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_insert",
+   "fieldtype": "Section Break",
+   "label": "Insert Duration"
+  },
+  {
+   "description": "Upper bound of the duration bucket holding this rank, capped at the maximum.",
+   "fieldname": "insert_p50_ms",
+   "fieldtype": "Float",
+   "label": "Insert p50 (ms)",
+   "non_negative": 1,
+   "read_only": 1
+  },
+  {
+   "description": "Upper bound of the duration bucket holding this rank, capped at the maximum.",
+   "fieldname": "insert_p95_ms",
+   "fieldtype": "Float",
+   "label": "Insert p95 (ms)",
+   "non_negative": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "insert_max_ms",
+   "fieldtype": "Float",
+   "label": "Insert Max (ms)",
+   "non_negative": 1,
    "read_only": 1
   }
  ],
  "grid_page_length": 50,
+ "in_create": 1,
  "index_web_pages_for_search": 1,
- "is_virtual": 1,
  "links": [],
- "modified": "2026-07-20 12:00:00.000000",
+ "modified": "2026-09-16 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "Pulse",
  "name": "Pulse Ingest Stat",
@@ -72,8 +159,7 @@
   }
  ],
  "row_format": "Dynamic",
- "sort_field": "day",
+ "sort_field": "hour",
  "sort_order": "DESC",
- "states": [],
- "title_field": "day"
+ "states": []
 }

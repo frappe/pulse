@@ -4,7 +4,7 @@ authors = [
     { name = "Frappe Technologies Pvt Ltd", email = "hello@frappe.io"}
 ]
 description = "A Frappe app to track user interactions with your product."
-requires-python = ">=3.10"
+requires-python = ">=3.14,<3.15"
 readme = "README.md"
 dynamic = ["version"]
 dependencies = []

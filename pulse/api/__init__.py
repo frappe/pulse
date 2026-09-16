@@ -1,10 +1,12 @@
+import time
+
 import frappe
 from frappe.rate_limiter import rate_limit
 
 from pulse import metrics
 from pulse.anon import derive_anon_user
 from pulse.logger import get_logger
-from pulse.pulse.doctype.pulse_event.pulse_event import enqueue_event
+from pulse.pulse.doctype.pulse_event.pulse_event import StorageUnavailable, prepare_event, store_events
 
 logger = get_logger()
 
@@ -29,10 +31,14 @@ def get_rate_limit():
 @frappe.whitelist(allow_guest=True, methods=["POST"])
 @rate_limit(key="site", limit=get_rate_limit, seconds=60)
 def ingest(event_name, captured_at, site=None, app=None, user=None, team=None, properties=None):
+	start = time.monotonic()
 	check_auth()
+	accepted = dropped = rejected = 0
+	stored = frappe._dict(retries=0, insert_ms=None)
+	failed = False
 
 	try:
-		staged = enqueue_event(
+		event = prepare_event(
 			event_name=event_name,
 			captured_at=captured_at,
 			site=site,
@@ -41,11 +47,19 @@ def ingest(event_name, captured_at, site=None, app=None, user=None, team=None, p
 			team=team,
 			properties=properties,
 		)
+		if event:
+			stored = store_events([event])
+			accepted = 1
+		else:
+			dropped = 1
 	except Exception as e:
 		# A rejection is the event's own fault and is counted as such; anything else
-		# is the service failing and is left out of the ingest tally.
+		# is the service failing.
 		if isinstance(e, frappe.ValidationError):
-			metrics.record(rejected=1)
+			rejected = 1
+		if isinstance(e, StorageUnavailable):
+			failed = True
+			stored = frappe._dict(retries=e.retries, insert_ms=e.insert_ms)
 		logger.error(
 			{
 				"request_ip": frappe.local.request_ip,
@@ -54,8 +68,16 @@ def ingest(event_name, captured_at, site=None, app=None, user=None, team=None, p
 			}
 		)
 		raise e
-
-	metrics.record(accepted=1 if staged else 0, dropped=0 if staged else 1)
+	finally:
+		metrics.record_request(
+			accepted=accepted,
+			dropped=dropped,
+			rejected=rejected,
+			duration_ms=(time.monotonic() - start) * 1000,
+			insert_ms=stored.insert_ms,
+			retries=stored.retries,
+			failed=failed,
+		)
 
 
 @frappe.whitelist(allow_guest=True, methods=["POST"])
@@ -79,39 +101,61 @@ def bulk_ingest(events, site=None):
 
 @rate_limit(key="site", limit=get_rate_limit, seconds=60)
 def _bulk_ingest(events, browser_direct):
-	"""Enqueue a batch, reporting per-event rejections instead of failing the batch.
+	"""Store a batch, reporting per-event rejections instead of failing the batch.
 
 	A rejected event is the client's to fix, not to retry: failing the whole request
-	made the client resend the batch, re-enqueuing the events that had already been
+	made the client resend the batch, re-sending the events that had already been
 	accepted. So a bad event is reported in the response and the batch still succeeds.
-	Infrastructure failures (Redis down) are *not* caught — they propagate, the request
-	fails, and the client's retry is then the correct response.
+	A storage failure is *not* caught — the request fails with a 503, and the client's
+	retry is then the correct response.
 	"""
+	start = time.monotonic()
 	check_auth()
-	_resolve_anonymous_users(events, browser_direct)
-	accepted = 0
-	dropped = 0
+	accepted = dropped = 0
 	rejected = []
-	for index, event in enumerate(events):
-		event = frappe._dict(event)
-		try:
-			staged = enqueue_event(
-				event_name=event.event_name,
-				captured_at=event.captured_at,
-				site=event.site,
-				app=event.app,
-				user=event.user,
-				team=event.team,
-				properties=event.properties,
-			)
-			if staged:
-				accepted += 1
+	stored = frappe._dict(retries=0, insert_ms=None)
+	failed = False
+
+	try:
+		_resolve_anonymous_users(events, browser_direct)
+		prepared = []
+		for index, event in enumerate(events):
+			event = frappe._dict(event)
+			try:
+				prepared_event = prepare_event(
+					event_name=event.event_name,
+					captured_at=event.captured_at,
+					site=event.site,
+					app=event.app,
+					user=event.user,
+					team=event.team,
+					properties=event.properties,
+				)
+			except frappe.ValidationError as e:
+				rejected.append({"index": index, "event_name": event.event_name, "error": str(e)})
+				continue
+			if prepared_event:
+				prepared.append(prepared_event)
 			else:
 				dropped += 1
-		except frappe.ValidationError as e:
-			rejected.append({"index": index, "event_name": event.event_name, "error": str(e)})
 
-	metrics.record(accepted=accepted, dropped=dropped, rejected=len(rejected))
+		try:
+			stored = store_events(prepared)
+		except StorageUnavailable as e:
+			failed = True
+			stored = frappe._dict(retries=e.retries, insert_ms=e.insert_ms)
+			raise
+		accepted = len(prepared)
+	finally:
+		metrics.record_request(
+			accepted=accepted,
+			dropped=dropped,
+			rejected=len(rejected),
+			duration_ms=(time.monotonic() - start) * 1000,
+			insert_ms=stored.insert_ms,
+			retries=stored.retries,
+			failed=failed,
+		)
 
 	if rejected:
 		logger.error(

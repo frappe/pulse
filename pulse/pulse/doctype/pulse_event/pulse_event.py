@@ -2,6 +2,7 @@
 # For license information, please see license.txt
 
 import time
+from uuid import uuid7
 
 import frappe
 from frappe.model.document import Document
@@ -38,7 +39,7 @@ def _get_event_stream() -> RedisStream:
 
 REQD_FIELDS = ["event_name", "captured_at"]
 
-# Columns written by the consumer for each event row. `name` is the Redis stream
+# Columns written for each event row. On the stream path `name` is the Redis stream
 # entry id, which makes the insert idempotent: a redelivered entry collides on the
 # primary key and is skipped (see `consume_pulse_events`). `dedup_key` extends that
 # same protection out past the host, to an event sent twice. The receive time is not
@@ -65,6 +66,10 @@ _INSERT_FIELDS = [
 CONSUME_BATCH_SIZE = 1000
 CONSUME_TIME_BUDGET_SECONDS = 50
 
+# Sleep before each retry of an insert that hit a deadlock or lock wait timeout; one
+# first attempt plus these makes three attempts in all.
+INSERT_RETRY_DELAYS = (0.1, 0.2)
+
 
 class PulseEvent(Document):
 	# begin: auto-generated types
@@ -90,18 +95,29 @@ class PulseEvent(Document):
 			frappe.throw(f"Missing required fields: {', '.join(missing)}")
 
 
-def enqueue_event(event_name, captured_at, site=None, app=None, user=None, team=None, properties=None):
-	"""Validate and push a single event onto the Redis staging stream.
+class StorageUnavailable(Exception):
+	"""The events could not be committed to the database.
+
+	Answered with a 503 so the client keeps the batch and sends it again, instead of
+	treating the request as settled.
+	"""
+
+	http_status_code = 503
+
+	def __init__(self, retries=0, insert_ms=None):
+		super().__init__("Event storage is unavailable")
+		self.retries = retries
+		self.insert_ms = insert_ms
+
+
+def prepare_event(event_name, captured_at, site=None, app=None, user=None, team=None, properties=None):
+	"""Validate a single event and build the row to store for it.
 
 	This is the single funnel every event passes through, whichever endpoint it
 	arrived at, so it is where the shape checks in `pulse.validation` are applied.
 
-	Events are never written to the database synchronously on the ingest path —
-	they are buffered in Redis and flushed in batches by `consume_pulse_events`.
-	This keeps ingest cheap and absorbs bursts without overrunning the database.
-
-	Returns whether the event was staged; a capture rule may drop it (see
-	`pulse.capture`), which is not a failure and is not reported as one.
+	Returns None when a capture rule drops the event (see `pulse.capture`), which is
+	not a failure and is not reported as one.
 	"""
 	missing = [
 		field for field, value in (("event_name", event_name), ("captured_at", captured_at)) if not value
@@ -113,7 +129,7 @@ def enqueue_event(event_name, captured_at, site=None, app=None, user=None, team=
 
 	action = evaluate(event_name=event_name, site=site, app=app, user=user)
 	if action == DROP:
-		return False
+		return None
 
 	received_at = now_datetime()
 	captured_at = resolve_captured_at(captured_at, received_at)
@@ -121,30 +137,91 @@ def enqueue_event(event_name, captured_at, site=None, app=None, user=None, team=
 	# (the stream stringifies every field with cstr).
 	properties = serialize_properties(properties)
 
-	_get_event_stream().add(
-		{
-			"dedup_key": dedup_key(event_name, captured_at, site, app, user, team, properties),
-			"event_name": event_name,
-			"captured_at": captured_at,
-			"site": site,
-			"user": user,
-			"team": team,
-			"app": app,
-			"is_internal": 1 if action == MARK_INTERNAL else 0,
-			"properties": properties,
-			"received_at": received_at,
-		}
-	)
-	return True
+	return {
+		"dedup_key": dedup_key(event_name, captured_at, site, app, user, team, properties),
+		"event_name": event_name,
+		"captured_at": captured_at,
+		"site": site,
+		"user": user,
+		"team": team,
+		"app": app,
+		"is_internal": 1 if action == MARK_INTERNAL else 0,
+		"properties": properties,
+		"received_at": received_at,
+	}
+
+
+def store_events(events: list[dict]) -> frappe._dict:
+	"""Store events built by `prepare_event`.
+
+	In Direct mode the events are committed to the database before this returns, so a
+	successful ingest response means the events are stored. In Redis Stream mode they
+	are only staged, for `consume_pulse_events` to flush later — the legacy path, kept
+	for rollback.
+
+	Returns the number of `retries` and the `insert_ms` spent inserting (None when
+	nothing was inserted). Raises `StorageUnavailable` if the events could not be
+	committed.
+	"""
+	if not events:
+		return frappe._dict(retries=0, insert_ms=None)
+
+	if frappe.get_single_value("Pulse Settings", "ingest_mode") == "Redis Stream":
+		stream = _get_event_stream()
+		for event in events:
+			stream.add(event)
+		return frappe._dict(retries=0, insert_ms=None)
+
+	return _insert_events(events)
+
+
+def _insert_events(events):
+	# A time-ordered name keeps inserts appending to the primary key index. The name
+	# column is shared with rows named after stream entry ids, so it stays a string.
+	rows = [_row(str(uuid7()), event, event["received_at"]) for event in events]
+	retries = 0
+	start = time.monotonic()
+	while True:
+		try:
+			frappe.db.bulk_insert("Pulse Event", _INSERT_FIELDS, rows, ignore_duplicates=True)
+			frappe.db.commit()
+			break
+		except Exception as e:
+			frappe.db.rollback()
+			if retries < len(INSERT_RETRY_DELAYS) and (
+				frappe.db.is_deadlocked(e) or frappe.db.is_timedout(e)
+			):
+				time.sleep(INSERT_RETRY_DELAYS[retries])
+				retries += 1
+				continue
+			insert_ms = (time.monotonic() - start) * 1000
+			logger.error(
+				{
+					"message": "Failed to store events",
+					"events": len(rows),
+					"retries": retries,
+					"error": frappe.get_traceback(with_context=True),
+				}
+			)
+			raise StorageUnavailable(retries=retries, insert_ms=insert_ms) from e
+
+	insert_ms = (time.monotonic() - start) * 1000
+	# Bookkeeping, deliberately after the commit: it must not stand between an event
+	# and being stored, and it is allowed to fail on its own.
+	record_events(events)
+	return frappe._dict(retries=retries, insert_ms=insert_ms)
 
 
 def _row_from_entry(entry, fallback_ts):
 	data = entry.get("data", {})
 	# `creation` is the receive time (set at ingest), not the flush time — the row
 	# represents the moment the event was received.
-	audit_ts = data.get("received_at") or fallback_ts
+	return _row(entry.get("id"), data, data.get("received_at") or fallback_ts)
+
+
+def _row(name, data, received_at):
 	return (
-		entry.get("id"),  # name == stream entry id (idempotency key)
+		name,
 		# NULL rather than "" for an entry staged before this column existed: the
 		# unique index tolerates any number of NULLs but only one "".
 		data.get("dedup_key") or None,
@@ -156,8 +233,8 @@ def _row_from_entry(entry, fallback_ts):
 		data.get("team"),
 		cint(data.get("is_internal")),
 		data.get("properties") or "{}",
-		audit_ts,  # creation
-		audit_ts,  # modified
+		received_at,  # creation
+		received_at,  # modified
 		"Administrator",  # owner
 		"Administrator",  # modified_by
 	)

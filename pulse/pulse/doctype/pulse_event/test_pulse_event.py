@@ -10,7 +10,8 @@ from frappe.utils.background_jobs import get_redis_conn
 
 from pulse.pulse.doctype.pulse_event.pulse_event import (
 	consume_pulse_events,
-	enqueue_event,
+	prepare_event,
+	store_events,
 )
 from pulse.pulse.doctype.redis_stream.redis_stream import RedisStream
 
@@ -32,8 +33,12 @@ class IntegrationTestPulseEvent(IntegrationTestCase):
 		frappe.flags.test_stream_name = self.test_stream_name
 		self.stream = RedisStream.init(name=self.test_stream_name)
 		self.conn = get_redis_conn()
+		# The stream path is what these tests drain; Direct mode would store on ingest.
+		self.ingest_mode = frappe.db.get_single_value("Pulse Settings", "ingest_mode")
+		frappe.db.set_single_value("Pulse Settings", "ingest_mode", "Redis Stream")
 
 	def tearDown(self):
+		frappe.db.set_single_value("Pulse Settings", "ingest_mode", self.ingest_mode)
 		self.stream.delete()
 		frappe.flags.test_stream_name = None
 		# Only remove rows this test created; leave existing site data untouched.
@@ -43,18 +48,18 @@ class IntegrationTestPulseEvent(IntegrationTestCase):
 
 	def _enqueue(self, name, **kwargs):
 		kwargs.setdefault("captured_at", frappe.utils.now_datetime())
-		enqueue_event(event_name=f"{self.prefix}{name}", **kwargs)
+		store_events([prepare_event(event_name=f"{self.prefix}{name}", **kwargs)])
 
 	def _count(self):
 		return frappe.db.count("Pulse Event", {"event_name": ("like", f"{self.prefix}%")})
 
-	def test_enqueue_validates_required_fields(self):
+	def test_prepare_validates_required_fields(self):
 		with self.assertRaises(frappe.ValidationError):
-			enqueue_event(event_name=None, captured_at=frappe.utils.now_datetime())
+			prepare_event(event_name=None, captured_at=frappe.utils.now_datetime())
 		with self.assertRaises(frappe.ValidationError):
-			enqueue_event(event_name="x", captured_at=None)
+			prepare_event(event_name="x", captured_at=None)
 
-	def test_enqueue_adds_entry_to_stream(self):
+	def test_store_adds_entry_to_stream(self):
 		self._enqueue(
 			"signup",
 			site="test-site",

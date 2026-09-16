@@ -9,7 +9,11 @@ import frappe
 from frappe.tests import IntegrationTestCase
 
 from pulse.capture import DROP, MARK_INTERNAL, clear_rule_cache, evaluate
-from pulse.pulse.doctype.pulse_event.pulse_event import consume_pulse_events, enqueue_event
+from pulse.pulse.doctype.pulse_event.pulse_event import (
+	consume_pulse_events,
+	prepare_event,
+	store_events,
+)
 from pulse.pulse.doctype.redis_stream.redis_stream import RedisStream
 
 
@@ -21,11 +25,15 @@ class IntegrationTestPulseCaptureRule(IntegrationTestCase):
 		frappe.flags.test_stream_name = f"test_capture_rule_{token}"
 		self.stream = RedisStream.init()
 		self.rules = []
+		# The stream path is what these tests drain; Direct mode would store on ingest.
+		self.ingest_mode = frappe.db.get_single_value("Pulse Settings", "ingest_mode")
+		frappe.db.set_single_value("Pulse Settings", "ingest_mode", "Redis Stream")
 
 	def tearDown(self):
 		for rule in self.rules:
 			frappe.delete_doc("Pulse Capture Rule", rule, force=True, ignore_permissions=True)
 		clear_rule_cache()
+		frappe.db.set_single_value("Pulse Settings", "ingest_mode", self.ingest_mode)
 		self.stream.delete()
 		frappe.flags.test_stream_name = None
 		frappe.db.delete("Pulse Event", {"event_name": ("like", f"{self.prefix}%")})
@@ -78,26 +86,26 @@ class IntegrationTestPulseCaptureRule(IntegrationTestCase):
 	def test_dropped_event_never_reaches_the_stream(self):
 		self._rule("Site", "noisy.frappe.cloud")
 
-		staged = enqueue_event(
+		event = prepare_event(
 			event_name=f"{self.prefix}pageview",
 			captured_at=frappe.utils.now_datetime(),
 			site="noisy.frappe.cloud",
 		)
 
-		self.assertFalse(staged)
+		self.assertIsNone(event)
 		self.assertEqual(self.stream.get_length(), 0)
 
 	def test_internal_event_is_stored_and_flagged(self):
 		self._rule("Site", "staging.frappe.cloud", action=MARK_INTERNAL)
 
-		staged = enqueue_event(
+		event = prepare_event(
 			event_name=f"{self.prefix}pageview",
 			captured_at=frappe.utils.now_datetime(),
 			site="staging.frappe.cloud",
 		)
+		store_events([event])
 		consume_pulse_events()
 
-		self.assertTrue(staged)
 		row = frappe.get_all(
 			"Pulse Event",
 			filters={"event_name": f"{self.prefix}pageview"},
@@ -106,11 +114,12 @@ class IntegrationTestPulseCaptureRule(IntegrationTestCase):
 		self.assertEqual(row.is_internal, 1)
 
 	def test_normal_event_is_not_flagged_internal(self):
-		enqueue_event(
+		event = prepare_event(
 			event_name=f"{self.prefix}pageview",
 			captured_at=frappe.utils.now_datetime(),
 			site="real.frappe.cloud",
 		)
+		store_events([event])
 		consume_pulse_events()
 
 		row = frappe.get_all(

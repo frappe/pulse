@@ -17,6 +17,7 @@ class PulseSettings(Document):
 		anon_salt: DF.Data | None
 		anon_salt_day: DF.Data | None
 		api_key: DF.Password | None
+		ingest_mode: DF.Literal["Direct", "Redis Stream"]
 		max_stream_length: DF.Int
 		rate_limit: DF.Int
 	# end: auto-generated types
