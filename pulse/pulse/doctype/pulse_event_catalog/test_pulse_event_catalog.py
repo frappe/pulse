@@ -8,7 +8,11 @@ import uuid
 import frappe
 from frappe.tests import IntegrationTestCase
 
-from pulse.pulse.doctype.pulse_event.pulse_event import consume_pulse_events, enqueue_event
+from pulse.pulse.doctype.pulse_event.pulse_event import (
+	consume_pulse_events,
+	prepare_event,
+	store_events,
+)
 from pulse.pulse.doctype.redis_stream.redis_stream import RedisStream
 
 
@@ -19,8 +23,12 @@ class IntegrationTestPulseEventCatalog(IntegrationTestCase):
 		self.prefix = f"test_{token}_"
 		frappe.flags.test_stream_name = f"test_catalog_{token}"
 		self.stream = RedisStream.init()
+		# The stream path is what these tests drain; Direct mode would store on ingest.
+		self.ingest_mode = frappe.db.get_single_value("Pulse Settings", "ingest_mode")
+		frappe.db.set_single_value("Pulse Settings", "ingest_mode", "Redis Stream")
 
 	def tearDown(self):
+		frappe.db.set_single_value("Pulse Settings", "ingest_mode", self.ingest_mode)
 		self.stream.delete()
 		frappe.flags.test_stream_name = None
 		frappe.db.delete("Pulse Event", {"event_name": ("like", f"{self.prefix}%")})
@@ -30,7 +38,7 @@ class IntegrationTestPulseEventCatalog(IntegrationTestCase):
 
 	def _enqueue(self, name, **kwargs):
 		kwargs.setdefault("captured_at", frappe.utils.now_datetime())
-		enqueue_event(event_name=f"{self.prefix}{name}", **kwargs)
+		store_events([prepare_event(event_name=f"{self.prefix}{name}", **kwargs)])
 
 	def _entry(self, name):
 		return frappe.get_doc("Pulse Event Catalog", f"{self.prefix}{name}")

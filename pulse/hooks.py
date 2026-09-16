@@ -149,6 +149,9 @@ scheduler_events = {
 		"pulse.pulse.doctype.pulse_event.pulse_event.consume_pulse_events",
 		"pulse.utils.simulator.run_scheduled_simulation",
 	],
+	"hourly": [
+		"pulse.metrics.flush_ingest_stats",
+	],
 }
 
 # Testing
