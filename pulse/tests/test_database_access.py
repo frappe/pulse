@@ -167,9 +167,23 @@ class IntegrationTestDatabaseAccess(IntegrationTestCase):
 		self.assertEqual(db_user.status, "Archived")
 		self.assertIn(("run_doc_method", "archive"), self.press.methods())
 
+	def test_members_read_the_tenant_and_its_credential(self):
+		self._activate(self._create())
+
+		frappe.set_user(MEMBER)
+		tenant = frappe.get_doc("Pulse Tenant", self.tenant.name, check_permission=True)
+		self.assertEqual(tenant.get_credential()["username"], "u_sdu-1")
+
 	def test_outsiders_cannot_read_the_credential(self):
 		self._activate(self._create())
 
 		frappe.set_user(OUTSIDER)
+		self.assertFalse(frappe.has_permission("Pulse Tenant", doc=self.tenant.name))
 		with self.assertRaises(frappe.PermissionError):
 			self.tenant.get_credential()
+
+	def test_removed_member_loses_access(self):
+		self.tenant.members = []
+		self.tenant.save()
+
+		self.assertFalse(frappe.has_permission("Pulse Tenant", doc=self.tenant.name, user=MEMBER))

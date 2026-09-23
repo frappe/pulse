@@ -2,6 +2,7 @@
 # For license information, please see license.txt
 
 import frappe
+import frappe.share
 from frappe import _
 from frappe.model.document import Document
 
@@ -48,8 +49,21 @@ class PulseTenant(Document):
 		self.set_onload("database_user_statuses", self._database_users("status", ("Pending", "Active")))
 
 	def on_update(self):
+		self._share_with_members()
 		if self.has_value_changed("status") and self.status == "Disabled":
 			self._revoke_database_users()
+
+	def _share_with_members(self):
+		"""A member reads the tenant through a share: role permissions can't be narrowed to membership."""
+		members = {row.user for row in self.members}
+		shared = set(
+			frappe.get_all("DocShare", {"share_doctype": self.doctype, "share_name": self.name}, pluck="user")
+		)
+		flags = {"ignore_share_permission": True}
+		for user in members - shared:
+			frappe.share.add_docshare(self.doctype, self.name, user, flags=flags)
+		for user in shared - members:
+			frappe.share.remove(self.doctype, self.name, user, flags=flags)
 
 	def _database_users(self, field, statuses):
 		return frappe.get_all(
