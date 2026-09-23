@@ -1,0 +1,111 @@
+{
+ "actions": [],
+ "autoname": "hash",
+ "creation": "2026-09-23 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "tenant",
+  "status",
+  "site_database_user",
+  "failure_reason",
+  "archived_on",
+  "column_break_conn",
+  "username",
+  "password",
+  "host",
+  "port",
+  "database"
+ ],
+ "fields": [
+  {
+   "fieldname": "tenant",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Tenant",
+   "options": "Pulse Tenant",
+   "reqd": 1
+  },
+  {
+   "default": "Pending",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Pending\nActive\nFailed\nArchived"
+  },
+  {
+   "description": "Name of the Site Database User record on Press.",
+   "fieldname": "site_database_user",
+   "fieldtype": "Data",
+   "label": "Site Database User"
+  },
+  {
+   "depends_on": "eval:doc.status == 'Failed'",
+   "fieldname": "failure_reason",
+   "fieldtype": "Small Text",
+   "label": "Failure Reason"
+  },
+  {
+   "fieldname": "archived_on",
+   "fieldtype": "Datetime",
+   "label": "Archived On"
+  },
+  {
+   "fieldname": "column_break_conn",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "username",
+   "fieldtype": "Data",
+   "label": "Username"
+  },
+  {
+   "fieldname": "password",
+   "fieldtype": "Password",
+   "label": "Password"
+  },
+  {
+   "fieldname": "host",
+   "fieldtype": "Data",
+   "label": "Host"
+  },
+  {
+   "fieldname": "port",
+   "fieldtype": "Int",
+   "label": "Port"
+  },
+  {
+   "fieldname": "database",
+   "fieldtype": "Data",
+   "label": "Database"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-09-23 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Pulse",
+ "name": "Pulse Database User",
+ "naming_rule": "Random",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "tenant"
+}
