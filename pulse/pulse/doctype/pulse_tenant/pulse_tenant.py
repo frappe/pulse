@@ -56,13 +56,15 @@ class PulseTenant(Document):
 	def _share_with_members(self):
 		"""A member reads the tenant through a share: role permissions can't be narrowed to membership."""
 		members = {row.user for row in self.members}
+		before = self.get_doc_before_save()
+		removed = {row.user for row in before.members} - members if before else set()
 		shared = set(
 			frappe.get_all("DocShare", {"share_doctype": self.doctype, "share_name": self.name}, pluck="user")
 		)
 		flags = {"ignore_share_permission": True}
 		for user in members - shared:
 			frappe.share.add_docshare(self.doctype, self.name, user, flags=flags)
-		for user in shared - members:
+		for user in removed:
 			frappe.share.remove(self.doctype, self.name, user, flags=flags)
 
 	def _database_users(self, field, statuses):

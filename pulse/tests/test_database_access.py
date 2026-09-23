@@ -4,6 +4,7 @@
 from unittest.mock import patch
 
 import frappe
+import frappe.share
 from frappe.tests import IntegrationTestCase
 
 from pulse.database_access import sync_pending
@@ -195,3 +196,10 @@ class IntegrationTestDatabaseAccess(IntegrationTestCase):
 		self.tenant.save()
 
 		self.assertFalse(frappe.has_permission("Pulse Tenant", doc=self.tenant.name, user=MEMBER))
+
+	def test_saving_keeps_shares_given_by_hand(self):
+		frappe.share.add_docshare("Pulse Tenant", self.tenant.name, OUTSIDER)
+		self.tenant.members = []
+		self.tenant.save()
+
+		self.assertTrue(frappe.has_permission("Pulse Tenant", doc=self.tenant.name, user=OUTSIDER))
