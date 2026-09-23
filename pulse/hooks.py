@@ -87,7 +87,8 @@ add_to_apps_screen = [
 # ------------
 
 # before_install = "pulse.install.before_install"
-# after_install = "pulse.install.after_install"
+after_install = "pulse.tenancy.create_event_view"
+after_migrate = "pulse.tenancy.create_event_view"
 
 # Uninstallation
 # ------------
@@ -152,6 +153,9 @@ scheduler_events = {
 	"hourly": [
 		"pulse.metrics.flush_ingest_stats",
 	],
+	"cron": {
+		"*/5 * * * *": ["pulse.database_access.sync_pending"],
+	},
 }
 
 # Testing
