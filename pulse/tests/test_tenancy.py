@@ -24,12 +24,12 @@ class IntegrationTestEventView(IntegrationTestCase):
 		cls.root = get_root_connection()
 		cls.username = f"pt_{uuid.uuid4().hex[:12]}"
 		cls.password = uuid.uuid4().hex
-		cls.root.sql(f"CREATE USER '{cls.username}'@'%' IDENTIFIED BY '{cls.password}'")
-		cls.root.sql(f"GRANT SELECT ON `{frappe.conf.db_name}`.`Pulse Event` TO '{cls.username}'@'%'")
+		cls.root.sql("CREATE USER %s@'%%' IDENTIFIED BY %s", (cls.username, cls.password))
+		cls.root.sql(f"GRANT SELECT ON `{frappe.conf.db_name}`.`Pulse Event` TO %s@'%%'", (cls.username,))
 
 	@classmethod
 	def tearDownClass(cls):
-		cls.root.sql(f"DROP USER IF EXISTS '{cls.username}'@'%'")
+		cls.root.sql("DROP USER IF EXISTS %s@'%%'", (cls.username,))
 		super().tearDownClass()
 
 	def setUp(self):
