@@ -110,6 +110,15 @@ class IntegrationTestDatabaseAccess(IntegrationTestCase):
 			},
 		)
 
+	def test_press_failure_on_create_leaves_no_local_user(self):
+		self.press.failing.add("insert")
+		frappe.db.savepoint("before_create")
+		with self.assertRaises(frappe.ValidationError):
+			self._create()
+		frappe.db.rollback(save_point="before_create")
+
+		self.assertFalse(frappe.db.exists("Pulse Database User", {"tenant": self.tenant.name}))
+
 	def test_active_user_stores_its_credential(self):
 		db_user = self._activate(self._create())
 

@@ -12,6 +12,8 @@ class PressDatabaseAccess:
 	"""A tenant's database user is a Press `Site Database User` on the Pulse site."""
 
 	def create(self, tenant):
+		"""Inserts locally first, so a Press failure rolls it back and a local failure never reaches Press."""
+		db_user = frappe.get_doc(doctype="Pulse Database User", tenant=tenant.name, status="Pending").insert()
 		remote = self._call(
 			"insert",
 			doc={
@@ -23,12 +25,8 @@ class PressDatabaseAccess:
 				"permissions": [{"table": "Pulse Event", "mode": "read_only", "allow_all_columns": 1}],
 			},
 		)
-		return frappe.get_doc(
-			doctype="Pulse Database User",
-			tenant=tenant.name,
-			status="Pending",
-			site_database_user=remote["name"],
-		).insert()
+		db_user.db_set("site_database_user", remote["name"])
+		return db_user
 
 	def revoke(self, db_user):
 		"""Archives locally first, so the view stops serving the user even if Press can't be reached."""
