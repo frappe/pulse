@@ -44,7 +44,8 @@ class PressDatabaseAccess:
 
 	def sync(self, db_user):
 		remote = self._call("get", doctype="Site Database User", name=db_user.site_database_user)
-		if remote["status"] == "Active":
+		status = remote["status"]
+		if status == "Active":
 			credential = self._run(db_user, "get_credential")
 			for older in frappe.get_all(
 				"Pulse Database User",
@@ -53,12 +54,14 @@ class PressDatabaseAccess:
 			):
 				self.revoke(frappe.get_doc("Pulse Database User", older))
 			db_user.update({field: credential[field] for field in CREDENTIAL_FIELDS})
-			db_user.status = "Active"
-			db_user.save()
-		elif remote["status"] == "Failed":
+		elif status == "Failed":
 			db_user.failure_reason = remote.get("failure_reason")
-			db_user.status = "Failed"
-			db_user.save()
+		elif status == "Archived":
+			db_user.archived_on = now_datetime()
+		else:
+			return
+		db_user.status = status
+		db_user.save()
 
 	def _run(self, db_user, method):
 		return self._call(

@@ -125,6 +125,14 @@ class IntegrationTestDatabaseAccess(IntegrationTestCase):
 		db_user.reload()
 		self.assertEqual((db_user.status, db_user.failure_reason), ("Failed", "No quota"))
 
+	def test_user_archived_on_press_is_archived(self):
+		db_user = self._create()
+		self.press.remote["sdu-1"]["status"] = "Archived"
+		sync_pending()
+
+		db_user.reload()
+		self.assertEqual((db_user.status, bool(db_user.archived_on)), ("Archived", True))
+
 	def test_pending_user_stays_pending(self):
 		db_user = self._create()
 		sync_pending()
