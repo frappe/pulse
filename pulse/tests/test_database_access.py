@@ -119,6 +119,12 @@ class IntegrationTestDatabaseAccess(IntegrationTestCase):
 
 		self.assertFalse(frappe.db.exists("Pulse Database User", {"tenant": self.tenant.name}))
 
+	def test_missing_api_secret_is_rejected(self):
+		frappe.get_single("Pulse Settings").update({"press_api_secret": ""}).save()
+		with self.assertRaises(frappe.ValidationError):
+			self._create()
+		self.assertFalse(self.press.calls)
+
 	def test_active_user_stores_its_credential(self):
 		db_user = self._activate(self._create())
 

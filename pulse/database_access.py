@@ -87,7 +87,12 @@ class PressDatabaseAccess:
 
 	def _settings(self):
 		settings = frappe.get_cached_doc("Pulse Settings")
-		if not (settings.press_url and settings.press_site and settings.press_api_key):
+		if not (
+			settings.press_url
+			and settings.press_site
+			and settings.press_api_key
+			and settings.get_password("press_api_secret", raise_exception=False)
+		):
 			frappe.throw(_("Set Press URL, Press Site, API Key and API Secret in Pulse Settings"))
 		return settings
 
