@@ -19,10 +19,13 @@ class FakePress:
 	def __init__(self):
 		self.calls = []
 		self.remote = {}
+		self.failing = set()
 
 	def __call__(self, url, headers, json, timeout):
 		self.calls.append((url.rsplit(".", 1)[1], headers, json))
 		method = url.rsplit(".", 1)[1]
+		if {method, json.get("method")} & self.failing:
+			raise frappe.ValidationError(f"Press {method} failed")
 		if method == "insert":
 			name = f"sdu-{len(self.remote) + 1}"
 			self.remote[name] = {"name": name, "status": "Pending"}
@@ -83,6 +86,10 @@ class IntegrationTestDatabaseAccess(IntegrationTestCase):
 		self.press.remote[db_user.site_database_user]["status"] = "Active"
 		sync_pending()
 		return frappe.get_doc("Pulse Database User", db_user.name)
+
+	def _commit(self):
+		"""Runs what a commit would, without committing the test's transaction."""
+		frappe.db.after_commit.run()
 
 	def test_create_inserts_a_pending_user(self):
 		db_user = self._create()
@@ -148,6 +155,7 @@ class IntegrationTestDatabaseAccess(IntegrationTestCase):
 		self.assertEqual(old.status, "Active")
 
 		self._activate(new)
+		self._commit()
 
 		old.reload()
 		self.assertEqual((old.status, bool(old.archived_on)), ("Archived", True))
@@ -165,12 +173,25 @@ class IntegrationTestDatabaseAccess(IntegrationTestCase):
 
 		db_user.reload()
 		self.assertEqual(db_user.status, "Archived")
+		self.assertNotIn(("run_doc_method", "archive"), self.press.methods())
+		self._commit()
 		self.assertIn(("run_doc_method", "archive"), self.press.methods())
+
+	def test_revoke_archives_locally_when_press_fails(self):
+		db_user = self._activate(self._create())
+		self.press.failing.add("archive")
+		self.tenant.revoke_database_user()
+		self._commit()
+
+		db_user.reload()
+		self.assertEqual(db_user.status, "Archived")
+		self.assertEqual(self.press.remote["sdu-1"]["status"], "Active")
 
 	def test_disabling_the_tenant_archives(self):
 		db_user = self._activate(self._create())
 		self.tenant.status = "Disabled"
 		self.tenant.save()
+		self._commit()
 
 		db_user.reload()
 		self.assertEqual(db_user.status, "Archived")

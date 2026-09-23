@@ -31,10 +31,11 @@ class PressDatabaseAccess:
 		).insert()
 
 	def revoke(self, db_user):
-		self._run(db_user, "archive")
+		"""Archives locally first, so the view stops serving the user even if Press can't be reached."""
 		db_user.status = "Archived"
 		db_user.archived_on = now_datetime()
 		db_user.save()
+		frappe.db.after_commit.add(lambda: self._archive(db_user))
 
 	def credential(self, db_user):
 		return {
@@ -62,6 +63,13 @@ class PressDatabaseAccess:
 			return
 		db_user.status = status
 		db_user.save()
+
+	def _archive(self, db_user):
+		try:
+			self._run(db_user, "archive")
+		except Exception:
+			# after commit: a plain insert would never be committed
+			frappe.log_error(f"Pulse Database User {db_user.name} archive on Press failed", defer_insert=True)
 
 	def _run(self, db_user, method):
 		return self._call(
