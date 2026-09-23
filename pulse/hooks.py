@@ -87,7 +87,8 @@ add_to_apps_screen = [
 # ------------
 
 # before_install = "pulse.install.before_install"
-# after_install = "pulse.install.after_install"
+after_install = "pulse.tenancy.create_event_view"
+after_migrate = "pulse.tenancy.create_event_view"
 
 # Uninstallation
 # ------------
