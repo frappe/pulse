@@ -5,6 +5,8 @@ import frappe
 from frappe import _
 from frappe.model.document import Document
 
+from pulse.database_access import PressDatabaseAccess
+
 
 class PulseTenant(Document):
 	# begin: auto-generated types
@@ -41,3 +43,47 @@ class PulseTenant(Document):
 					frappe.bold(owned[0].app), frappe.bold(owned[0].parent)
 				)
 			)
+
+	def onload(self):
+		self.set_onload("database_user_statuses", self._database_users("status", ("Pending", "Active")))
+
+	def on_update(self):
+		if self.has_value_changed("status") and self.status == "Disabled":
+			self._revoke_database_users()
+
+	def _database_users(self, field, statuses):
+		return frappe.get_all(
+			"Pulse Database User", {"tenant": self.name, "status": ("in", statuses)}, pluck=field
+		)
+
+	@frappe.whitelist()
+	def create_database_user(self):
+		"""Provisions the first user, or rotates: the Active one is archived once the new one is Active."""
+		self.check_permission("write")
+		if self.status == "Disabled":
+			frappe.throw(_("Tenant {0} is disabled").format(frappe.bold(self.name)))
+		if self._database_users("name", ("Pending",)):
+			frappe.throw(_("A database user is already being created for this tenant"))
+		return PressDatabaseAccess().create(self).name
+
+	@frappe.whitelist()
+	def revoke_database_user(self):
+		self.check_permission("write")
+		self._revoke_database_users()
+
+	def _revoke_database_users(self):
+		access = PressDatabaseAccess()
+		for name in self._database_users("name", ("Pending", "Active")):
+			access.revoke(frappe.get_doc("Pulse Database User", name))
+
+	@frappe.whitelist()
+	def get_credential(self):
+		if (
+			frappe.session.user not in {row.user for row in self.members}
+			and "System Manager" not in frappe.get_roles()
+		):
+			raise frappe.PermissionError
+		active = self._database_users("name", ("Active",))
+		if not active:
+			frappe.throw(_("Tenant {0} has no active database user").format(frappe.bold(self.name)))
+		return PressDatabaseAccess().credential(frappe.get_doc("Pulse Database User", active[0]))

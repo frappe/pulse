@@ -153,6 +153,9 @@ scheduler_events = {
 	"hourly": [
 		"pulse.metrics.flush_ingest_stats",
 	],
+	"cron": {
+		"*/5 * * * *": ["pulse.database_access.sync_pending"],
+	},
 }
 
 # Testing

@@ -19,6 +19,10 @@ class PulseSettings(Document):
 		api_key: DF.Password | None
 		ingest_mode: DF.Literal["Direct", "Redis Stream"]
 		max_stream_length: DF.Int
+		press_api_key: DF.Data | None
+		press_api_secret: DF.Password | None
+		press_site: DF.Data | None
+		press_url: DF.Data | None
 		rate_limit: DF.Int
 	# end: auto-generated types
 
