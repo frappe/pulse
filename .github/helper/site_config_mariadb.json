@@ -4,6 +4,7 @@
 	"db_name": "test_frappe",
 	"db_password": "test_frappe",
 	"admin_password": "admin",
+	"encryption_key": "-9e2rOdoqylu88JuC0Exafz2xV8QM69tVRWMmRmU-90=",
 	"root_login": "root",
 	"root_password": "root",
 	"host_name": "http://test_site:8000",

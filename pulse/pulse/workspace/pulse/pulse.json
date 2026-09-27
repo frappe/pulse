@@ -1,5 +1,4 @@
 {
- "app": "pulse",
  "charts": [],
  "content": "[{\"id\": \"pulseShort1\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Event Catalog\", \"col\": 4}}, {\"id\": \"pulseShort2\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Capture Rules\", \"col\": 4}}, {\"id\": \"pulseShort3\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Pulse Team\", \"col\": 4}}, {\"id\": \"pulseSpacer\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"pulseCard01\", \"type\": \"card\", \"data\": {\"card_name\": \"Events\", \"col\": 4}}, {\"id\": \"pulseCard02\", \"type\": \"card\", \"data\": {\"card_name\": \"Identity\", \"col\": 4}}, {\"id\": \"pulseCard03\", \"type\": \"card\", \"data\": {\"card_name\": \"Health\", \"col\": 4}}, {\"id\": \"pulseCard04\", \"type\": \"card\", \"data\": {\"card_name\": \"Configuration\", \"col\": 4}}]",
  "creation": "2026-07-20 12:00:00.000000",
@@ -146,7 +145,7 @@
    "type": "Link"
   }
  ],
- "modified": "2026-07-21 13:45:00.000000",
+ "modified": "2026-09-27 13:00:00.000000",
  "modified_by": "Administrator",
  "module": "Pulse",
  "name": "Pulse",
@@ -180,161 +179,6 @@
    "link_to": "Pulse Team",
    "stats_filter": "[]",
    "type": "DocType"
-  }
- ],
- "sidebar_items": [
-  {
-   "child": 0,
-   "collapsible": 0,
-   "indent": 0,
-   "keep_closed": 0,
-   "label": "Events",
-   "show_arrow": 0,
-   "type": "Section Break"
-  },
-  {
-   "child": 0,
-   "collapsible": 1,
-   "icon": "logs",
-   "indent": 0,
-   "keep_closed": 0,
-   "label": "Pulse Event",
-   "link_to": "Pulse Event",
-   "link_type": "DocType",
-   "open_in_new_tab": 0,
-   "show_arrow": 0,
-   "type": "Link"
-  },
-  {
-   "child": 0,
-   "collapsible": 1,
-   "icon": "book-text",
-   "indent": 0,
-   "keep_closed": 0,
-   "label": "Event Catalog",
-   "link_to": "Pulse Event Catalog",
-   "link_type": "DocType",
-   "open_in_new_tab": 0,
-   "show_arrow": 0,
-   "type": "Link"
-  },
-  {
-   "child": 0,
-   "collapsible": 0,
-   "indent": 0,
-   "keep_closed": 0,
-   "label": "Identity",
-   "show_arrow": 0,
-   "type": "Section Break"
-  },
-  {
-   "child": 0,
-   "collapsible": 1,
-   "icon": "users",
-   "indent": 0,
-   "keep_closed": 0,
-   "label": "Pulse Team",
-   "link_to": "Pulse Team",
-   "link_type": "DocType",
-   "open_in_new_tab": 0,
-   "show_arrow": 0,
-   "type": "Link"
-  },
-  {
-   "child": 0,
-   "collapsible": 1,
-   "icon": "user-cog",
-   "indent": 0,
-   "keep_closed": 0,
-   "label": "Pulse Alias",
-   "link_to": "Pulse Alias",
-   "link_type": "DocType",
-   "open_in_new_tab": 0,
-   "show_arrow": 0,
-   "type": "Link"
-  },
-  {
-   "child": 0,
-   "collapsible": 0,
-   "indent": 0,
-   "keep_closed": 0,
-   "label": "Health",
-   "show_arrow": 0,
-   "type": "Section Break"
-  },
-  {
-   "child": 0,
-   "collapsible": 1,
-   "icon": "monitor-check",
-   "indent": 0,
-   "keep_closed": 0,
-   "label": "Ingest Stats",
-   "link_to": "Pulse Ingest Stat",
-   "link_type": "DocType",
-   "open_in_new_tab": 0,
-   "show_arrow": 0,
-   "type": "Link"
-  },
-  {
-   "child": 0,
-   "collapsible": 1,
-   "icon": "server",
-   "indent": 0,
-   "keep_closed": 0,
-   "label": "Redis Stream",
-   "link_to": "Redis Stream",
-   "link_type": "DocType",
-   "open_in_new_tab": 0,
-   "show_arrow": 0,
-   "type": "Link"
-  },
-  {
-   "child": 0,
-   "collapsible": 1,
-   "icon": "notepad-text",
-   "indent": 0,
-   "keep_closed": 0,
-   "label": "Pulse Log",
-   "link_to": "Pulse Log",
-   "link_type": "DocType",
-   "open_in_new_tab": 0,
-   "show_arrow": 0,
-   "type": "Link"
-  },
-  {
-   "child": 0,
-   "collapsible": 0,
-   "indent": 0,
-   "keep_closed": 0,
-   "label": "Configuration",
-   "show_arrow": 0,
-   "type": "Section Break"
-  },
-  {
-   "child": 0,
-   "collapsible": 1,
-   "icon": "wrench",
-   "indent": 0,
-   "keep_closed": 0,
-   "label": "Capture Rules",
-   "link_to": "Pulse Capture Rule",
-   "link_type": "DocType",
-   "open_in_new_tab": 0,
-   "show_arrow": 0,
-   "type": "Link"
-  },
-  {
-   "child": 0,
-   "collapsible": 1,
-   "icon": "settings",
-   "indent": 0,
-   "keep_closed": 0,
-   "label": "Pulse Settings",
-   "link_to": "Pulse Settings",
-   "link_type": "DocType",
-   "open_in_new_tab": 0,
-   "show_arrow": 0,
-   "type": "Link"
   }
  ],
  "standard": 1,

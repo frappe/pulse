@@ -1,6 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Pulse">
-  <rect width="64" height="64" rx="14" fill="#006A4E"/>
-  <path d="M9 32h11l5.5-12L32 44l6-16 4 4h12"
-        fill="none" stroke="#FFFFFF" stroke-width="4.5"
-        stroke-linecap="round" stroke-linejoin="round"/>
+<svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="28" height="28" rx="7" fill="#E5366C"/>
+<path d="M14 13V21M10.5 21H17.5M14 9A2 2 0 0 1 14 13A2 2 0 0 1 14 9M8.88 15A6.5 6.5 0 0 1 8.88 7M19.12 7A6.5 6.5 0 0 1 19.12 15" stroke="white" stroke-width="2" stroke-linejoin="round"/>
 </svg>

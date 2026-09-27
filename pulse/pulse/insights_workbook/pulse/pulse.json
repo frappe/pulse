@@ -1,0 +1,955 @@
+{
+ "charts": {
+  "pulse-accepted-events-per-day-against-the-same-day-last-week": {
+   "chart_type": "Line",
+   "config": {
+    "filters": {
+     "filters": [],
+     "logical_operator": "And"
+    },
+    "limit": 100,
+    "x_axis": {
+     "dimension": {
+      "column_name": "date",
+      "data_type": "Datetime",
+      "dimension_name": "Day",
+      "granularity": "day"
+     }
+    },
+    "y_axis": {
+     "series": [
+      {
+       "measure": {
+        "aggregation": "sum",
+        "column_name": "accepted",
+        "data_type": "Integer",
+        "measure_name": "Accepted"
+       }
+      },
+      {
+       "measure": {
+        "aggregation": "sum",
+        "column_name": "same_day_last_week",
+        "data_type": "Integer",
+        "measure_name": "Same Day Last Week"
+       }
+      }
+     ],
+     "show_data_points": false
+    }
+   },
+   "folder": null,
+   "name": "pulse-accepted-events-per-day-against-the-same-day-last-week",
+   "query": "pulse-accepted-events-per-day",
+   "sort_order": 1,
+   "title": "Accepted Events per Day, Against the Same Day Last Week",
+   "workbook": "pulse"
+  },
+  "pulse-ingest-latency-and-retries-per-day": {
+   "chart_type": "Bar",
+   "config": {
+    "filters": {
+     "filters": [],
+     "logical_operator": "And"
+    },
+    "limit": 100,
+    "x_axis": {
+     "dimension": {
+      "column_name": "hour",
+      "data_type": "Datetime",
+      "dimension_name": "day",
+      "granularity": "day"
+     }
+    },
+    "y_axis": {
+     "series": [
+      {
+       "measure": {
+        "aggregation": "max",
+        "column_name": "request_p95_ms",
+        "data_type": "Decimal",
+        "measure_name": "Request p95 (ms)"
+       },
+       "type": "line"
+      },
+      {
+       "measure": {
+        "aggregation": "max",
+        "column_name": "insert_p95_ms",
+        "data_type": "Decimal",
+        "measure_name": "Insert p95 (ms)"
+       },
+       "type": "line"
+      },
+      {
+       "align": "Right",
+       "measure": {
+        "aggregation": "sum",
+        "column_name": "retries",
+        "data_type": "Integer",
+        "measure_name": "Retries"
+       },
+       "type": "bar"
+      },
+      {
+       "align": "Right",
+       "measure": {
+        "aggregation": "sum",
+        "column_name": "failed_requests",
+        "data_type": "Integer",
+        "measure_name": "Failed Requests"
+       },
+       "type": "bar"
+      }
+     ]
+    }
+   },
+   "folder": null,
+   "name": "pulse-ingest-latency-and-retries-per-day",
+   "query": "pulse-ingest-stats",
+   "sort_order": 3,
+   "title": "Ingest Latency and Retries per Day",
+   "workbook": "pulse"
+  },
+  "pulse-ingest-readings": {
+   "chart_type": "Number",
+   "config": {
+    "date_column": {
+     "column_name": "hour",
+     "data_type": "Datetime",
+     "dimension_name": "hour"
+    },
+    "filters": {
+     "filters": [],
+     "logical_operator": "And"
+    },
+    "number_column_options": [
+     {
+      "comparison": {
+       "source": "previous"
+      }
+     },
+     {
+      "comparison": {
+       "source": "previous"
+      },
+      "negative_is_better": true
+     },
+     {
+      "comparison": {
+       "source": "previous"
+      },
+      "negative_is_better": true
+     },
+     {
+      "comparison": {
+       "source": "previous"
+      },
+      "negative_is_better": true
+     }
+    ],
+    "number_columns": [
+     {
+      "aggregation": "sum",
+      "column_name": "accepted",
+      "data_type": "Integer",
+      "id": "Accepted Events",
+      "measure_name": "Accepted Events"
+     },
+     {
+      "data_type": "Decimal",
+      "expression": {
+       "expression": "sum(rejected) / sum(received)",
+       "type": "expression"
+      },
+      "format": "percent",
+      "id": "Rejected",
+      "measure_name": "Rejected"
+     },
+     {
+      "data_type": "Decimal",
+      "expression": {
+       "expression": "sum(dropped) / sum(received)",
+       "type": "expression"
+      },
+      "format": "percent",
+      "id": "Dropped",
+      "measure_name": "Dropped"
+     },
+     {
+      "data_type": "Decimal",
+      "expression": {
+       "expression": "sum(failed_requests) / sum(requests)",
+       "type": "expression"
+      },
+      "format": "percent",
+      "id": "Failed Requests",
+      "measure_name": "Failed Requests"
+     }
+    ],
+    "number_format": {
+     "decimals": 1,
+     "shorten": true
+    },
+    "number_formats": {
+     "Dropped": {
+      "decimals": 2
+     },
+     "Failed Requests": {
+      "decimals": 2
+     },
+     "Rejected": {
+      "decimals": 2
+     }
+    },
+    "sparkline": false,
+    "window": {
+     "span": "last 7 days"
+    }
+   },
+   "folder": null,
+   "name": "pulse-ingest-readings",
+   "query": "pulse-ingest-stats",
+   "sort_order": 0,
+   "title": "Ingest Readings",
+   "workbook": "pulse"
+  },
+  "pulse-new-event-names-per-day": {
+   "chart_type": "Bar",
+   "config": {
+    "filters": {
+     "filters": [],
+     "logical_operator": "And"
+    },
+    "limit": 100,
+    "x_axis": {
+     "dimension": {
+      "column_name": "first_seen",
+      "data_type": "Datetime",
+      "dimension_name": "Day",
+      "granularity": "day"
+     }
+    },
+    "y_axis": {
+     "reference_lines": [
+      {
+       "aggregate": "average",
+       "axis": "y",
+       "dashed": true,
+       "id": "7feeff3c",
+       "label": "Average",
+       "measure_name": "Event Names"
+      }
+     ],
+     "series": [
+      {
+       "measure": {
+        "aggregation": "count",
+        "column_name": "count",
+        "data_type": "Integer",
+        "measure_name": "Event Names"
+       }
+      }
+     ]
+    }
+   },
+   "folder": null,
+   "name": "pulse-new-event-names-per-day",
+   "query": "pulse-event-catalog",
+   "sort_order": 5,
+   "title": "New Event Names per Day",
+   "workbook": "pulse"
+  },
+  "pulse-rejected-and-dropped-share-per-day": {
+   "chart_type": "Line",
+   "config": {
+    "filters": {
+     "filters": [],
+     "logical_operator": "And"
+    },
+    "limit": 100,
+    "x_axis": {
+     "dimension": {
+      "column_name": "hour",
+      "data_type": "Datetime",
+      "dimension_name": "day",
+      "granularity": "day"
+     }
+    },
+    "y_axis": {
+     "series": [
+      {
+       "measure": {
+        "data_type": "Decimal",
+        "expression": {
+         "expression": "sum(rejected) / sum(received)",
+         "type": "expression"
+        },
+        "format": "percent",
+        "measure_name": "Rejected"
+       }
+      },
+      {
+       "measure": {
+        "data_type": "Decimal",
+        "expression": {
+         "expression": "sum(dropped) / sum(received)",
+         "type": "expression"
+        },
+        "format": "percent",
+        "measure_name": "Dropped"
+       }
+      }
+     ]
+    }
+   },
+   "folder": null,
+   "name": "pulse-rejected-and-dropped-share-per-day",
+   "query": "pulse-ingest-stats",
+   "sort_order": 2,
+   "title": "Rejected and Dropped Share per Day",
+   "workbook": "pulse"
+  },
+  "pulse-sites-sending-heartbeats-per-app-against-a-week-before": {
+   "chart_type": "Heatmap",
+   "config": {
+    "filters": {
+     "filters": [],
+     "logical_operator": "And"
+    },
+    "limit": 2000,
+    "max": 0.5,
+    "min": -0.5,
+    "palette": "diverging",
+    "value_column": {
+     "aggregation": "avg",
+     "column_name": "change",
+     "data_type": "Decimal",
+     "format": "percent",
+     "measure_name": "Change"
+    },
+    "x_column": {
+     "column_name": "date",
+     "data_type": "Datetime",
+     "dimension_name": "Day",
+     "granularity": "day"
+    },
+    "y_column": {
+     "column_name": "app",
+     "data_type": "String",
+     "dimension_name": "App"
+    }
+   },
+   "folder": null,
+   "name": "pulse-sites-sending-heartbeats-per-app-against-a-week-before",
+   "query": "pulse-heartbeat-sites-against-a-week-before",
+   "sort_order": 4,
+   "title": "Sites Sending Heartbeats per App, Against a Week Before",
+   "workbook": "pulse"
+  }
+ },
+ "creation": "2026-09-27 13:07:39.955565",
+ "dashboards": {
+  "pulse-health": {
+   "items": [
+    {
+     "default_operator": "within",
+     "default_value": "last 4 weeks (include current)",
+     "filter_name": "Date",
+     "filter_type": "Date",
+     "icon": "calendar",
+     "layout": {
+      "h": 2,
+      "i": "filter-date",
+      "w": 4,
+      "x": 0,
+      "y": 0
+     },
+     "links": {
+      "pulse-accepted-events-per-day-against-the-same-day-last-week": "`pulse-accepted-events-per-day`.`date`",
+      "pulse-ingest-latency-and-retries-per-day": "`pulse-ingest-stats`.`hour`",
+      "pulse-new-event-names-per-day": "`pulse-event-catalog`.`first_seen`",
+      "pulse-rejected-and-dropped-share-per-day": "`pulse-ingest-stats`.`hour`",
+      "pulse-sites-sending-heartbeats-per-app-against-a-week-before": "`pulse-heartbeat-sites-against-a-week-before`.`date`"
+     },
+     "type": "filter"
+    },
+    {
+     "chart": "pulse-ingest-readings",
+     "layout": {
+      "h": 5,
+      "i": "readings-0",
+      "w": 5,
+      "x": 0,
+      "y": 2
+     },
+     "reading": "Accepted Events",
+     "type": "chart"
+    },
+    {
+     "chart": "pulse-ingest-readings",
+     "layout": {
+      "h": 5,
+      "i": "readings-1",
+      "w": 5,
+      "x": 5,
+      "y": 2
+     },
+     "reading": "Rejected",
+     "type": "chart"
+    },
+    {
+     "chart": "pulse-ingest-readings",
+     "layout": {
+      "h": 5,
+      "i": "readings-2",
+      "w": 5,
+      "x": 10,
+      "y": 2
+     },
+     "reading": "Dropped",
+     "type": "chart"
+    },
+    {
+     "chart": "pulse-ingest-readings",
+     "layout": {
+      "h": 5,
+      "i": "readings-3",
+      "w": 5,
+      "x": 15,
+      "y": 2
+     },
+     "reading": "Failed Requests",
+     "type": "chart"
+    },
+    {
+     "chart": "pulse-accepted-events-per-day-against-the-same-day-last-week",
+     "layout": {
+      "h": 20,
+      "i": "traffic",
+      "w": 10,
+      "x": 0,
+      "y": 9
+     },
+     "type": "chart"
+    },
+    {
+     "chart": "pulse-rejected-and-dropped-share-per-day",
+     "layout": {
+      "h": 20,
+      "i": "declined",
+      "w": 10,
+      "x": 10,
+      "y": 9
+     },
+     "type": "chart"
+    },
+    {
+     "chart": "pulse-sites-sending-heartbeats-per-app-against-a-week-before",
+     "layout": {
+      "h": 24,
+      "i": "quiet_clients",
+      "w": 20,
+      "x": 0,
+      "y": 29
+     },
+     "type": "chart"
+    },
+    {
+     "chart": "pulse-ingest-latency-and-retries-per-day",
+     "layout": {
+      "h": 20,
+      "i": "strain",
+      "w": 10,
+      "x": 0,
+      "y": 53
+     },
+     "type": "chart"
+    },
+    {
+     "chart": "pulse-new-event-names-per-day",
+     "layout": {
+      "h": 20,
+      "i": "new_names",
+      "w": 10,
+      "x": 10,
+      "y": 53
+     },
+     "type": "chart"
+    }
+   ],
+   "name": "pulse-health",
+   "title": "Health",
+   "vertical_compact_layout": 1,
+   "visible_to_roles": [
+    {
+     "role": "System Manager"
+    }
+   ],
+   "workbook": "pulse"
+  }
+ },
+ "docstatus": 0,
+ "doctype": "Insights Workbook",
+ "folders": [],
+ "idx": 0,
+ "is_standard": 1,
+ "modified": "2026-09-27 13:13:12.128679",
+ "modified_by": "Administrator",
+ "module": "Pulse",
+ "name": "pulse",
+ "owner": "Administrator",
+ "queries": {
+  "pulse-accepted-events-per-day": {
+   "folder": null,
+   "is_builder_query": 1,
+   "is_native_query": 0,
+   "is_script_query": 0,
+   "name": "pulse-accepted-events-per-day",
+   "operations": [
+    {
+     "table": {
+      "query_name": "pulse-ingest-stats",
+      "type": "query",
+      "workbook": "pulse"
+     },
+     "type": "source"
+    },
+    {
+     "dimensions": [
+      {
+       "column_name": "hour",
+       "data_type": "Datetime",
+       "dimension_name": "date",
+       "granularity": "day"
+      }
+     ],
+     "measures": [
+      {
+       "aggregation": "sum",
+       "column_name": "accepted",
+       "data_type": "Integer",
+       "measure_name": "accepted"
+      }
+     ],
+     "type": "summarize"
+    },
+    {
+     "filters": [
+      {
+       "expression": {
+        "expression": "date < today()",
+        "type": "expression"
+       }
+      }
+     ],
+     "logical_operator": "And",
+     "type": "filter_group"
+    },
+    {
+     "data_type": "Integer",
+     "expression": {
+      "expression": "previous_period_value(accepted, date, 7)",
+      "type": "expression"
+     },
+     "new_name": "same_day_last_week",
+     "type": "mutate"
+    }
+   ],
+   "sort_order": 1,
+   "title": "Accepted Events per Day",
+   "use_live_connection": 0,
+   "workbook": "pulse"
+  },
+  "pulse-apps-watched-for-heartbeats": {
+   "folder": null,
+   "is_builder_query": 1,
+   "is_native_query": 0,
+   "is_script_query": 0,
+   "name": "pulse-apps-watched-for-heartbeats",
+   "operations": [
+    {
+     "table": {
+      "query_name": "pulse-heartbeat-sites-per-app-per-day",
+      "type": "query",
+      "workbook": "pulse"
+     },
+     "type": "source"
+    },
+    {
+     "dimensions": [
+      {
+       "column_name": "app",
+       "data_type": "String",
+       "dimension_name": "app"
+      }
+     ],
+     "measures": [
+      {
+       "aggregation": "max",
+       "column_name": "sites",
+       "data_type": "Integer",
+       "measure_name": "peak_sites"
+      }
+     ],
+     "type": "summarize"
+    },
+    {
+     "filters": [
+      {
+       "column": {
+        "column_name": "peak_sites",
+        "type": "column"
+       },
+       "operator": ">=",
+       "value": 20
+      }
+     ],
+     "logical_operator": "And",
+     "type": "filter_group"
+    },
+    {
+     "data_type": "Integer",
+     "expression": {
+      "expression": "ibis.literal(1)",
+      "type": "expression"
+     },
+     "new_name": "grid",
+     "type": "mutate"
+    }
+   ],
+   "sort_order": 3,
+   "title": "Apps Watched for Heartbeats",
+   "use_live_connection": 0,
+   "workbook": "pulse"
+  },
+  "pulse-event-catalog": {
+   "folder": null,
+   "is_builder_query": 1,
+   "is_native_query": 0,
+   "is_script_query": 0,
+   "name": "pulse-event-catalog",
+   "operations": [
+    {
+     "table": {
+      "data_source": "Site DB",
+      "table_name": "tabPulse Event Catalog",
+      "type": "table"
+     },
+     "type": "source"
+    },
+    {
+     "column_names": [
+      "event_name",
+      "status",
+      "event_count",
+      "first_seen",
+      "last_seen"
+     ],
+     "type": "select"
+    }
+   ],
+   "sort_order": 5,
+   "title": "Event Catalog",
+   "use_live_connection": 0,
+   "workbook": "pulse"
+  },
+  "pulse-heartbeat-sites-against-a-week-before": {
+   "folder": null,
+   "is_builder_query": 1,
+   "is_native_query": 0,
+   "is_script_query": 0,
+   "name": "pulse-heartbeat-sites-against-a-week-before",
+   "operations": [
+    {
+     "table": {
+      "query_name": "pulse-heartbeat-sites-per-app-per-day",
+      "type": "query",
+      "workbook": "pulse"
+     },
+     "type": "source"
+    },
+    {
+     "dimensions": [
+      {
+       "column_name": "date",
+       "data_type": "Datetime",
+       "dimension_name": "date"
+      }
+     ],
+     "measures": [
+      {
+       "aggregation": "count",
+       "column_name": "count",
+       "data_type": "Integer",
+       "measure_name": "apps"
+      }
+     ],
+     "type": "summarize"
+    },
+    {
+     "data_type": "Integer",
+     "expression": {
+      "expression": "ibis.literal(1)",
+      "type": "expression"
+     },
+     "new_name": "grid",
+     "type": "mutate"
+    },
+    {
+     "join_condition": {
+      "left_column": {
+       "column_name": "grid",
+       "type": "column"
+      },
+      "right_column": {
+       "column_name": "grid",
+       "type": "column"
+      }
+     },
+     "join_type": "inner",
+     "select_columns": [
+      {
+       "column_name": "app",
+       "type": "column"
+      }
+     ],
+     "table": {
+      "query_name": "pulse-apps-watched-for-heartbeats",
+      "type": "query",
+      "workbook": "pulse"
+     },
+     "type": "join"
+    },
+    {
+     "join_condition": {
+      "join_expression": {
+       "expression": "(t1.app == t2.app) & (t1.date == t2.date)",
+       "type": "expression"
+      }
+     },
+     "join_type": "left",
+     "select_columns": [
+      {
+       "column_name": "sites",
+       "type": "column"
+      }
+     ],
+     "table": {
+      "query_name": "pulse-heartbeat-sites-per-app-per-day",
+      "type": "query",
+      "workbook": "pulse"
+     },
+     "type": "join"
+    },
+    {
+     "data_type": "Integer",
+     "expression": {
+      "expression": "coalesce(sites, 0)",
+      "type": "expression"
+     },
+     "new_name": "sites_seen",
+     "type": "mutate"
+    },
+    {
+     "column_names": [
+      "app",
+      "date",
+      "sites_seen"
+     ],
+     "type": "select"
+    },
+    {
+     "data_type": "Integer",
+     "expression": {
+      "expression": "previous_period_value(sites_seen, date, 7)",
+      "type": "expression"
+     },
+     "new_name": "sites_week_before",
+     "type": "mutate"
+    },
+    {
+     "filters": [
+      {
+       "column": {
+        "column_name": "sites_week_before",
+        "type": "column"
+       },
+       "operator": ">",
+       "value": 0
+      }
+     ],
+     "logical_operator": "And",
+     "type": "filter_group"
+    },
+    {
+     "data_type": "Decimal",
+     "expression": {
+      "expression": "(sites_seen - sites_week_before) / sites_week_before",
+      "type": "expression"
+     },
+     "new_name": "change",
+     "type": "mutate"
+    },
+    {
+     "column_names": [
+      "app",
+      "date",
+      "sites_seen",
+      "sites_week_before",
+      "change"
+     ],
+     "type": "select"
+    }
+   ],
+   "sort_order": 4,
+   "title": "Heartbeat Sites Against a Week Before",
+   "use_live_connection": 0,
+   "workbook": "pulse"
+  },
+  "pulse-heartbeat-sites-per-app-per-day": {
+   "folder": null,
+   "is_builder_query": 1,
+   "is_native_query": 0,
+   "is_script_query": 0,
+   "name": "pulse-heartbeat-sites-per-app-per-day",
+   "operations": [
+    {
+     "table": {
+      "data_source": "Site DB",
+      "table_name": "tabPulse Event",
+      "type": "table"
+     },
+     "type": "source"
+    },
+    {
+     "filters": [
+      {
+       "column": {
+        "column_name": "event_name",
+        "type": "column"
+       },
+       "operator": "=",
+       "value": "app_heartbeat"
+      }
+     ],
+     "logical_operator": "And",
+     "type": "filter_group"
+    },
+    {
+     "filters": [
+      {
+       "column": {
+        "column_name": "is_internal",
+        "type": "column"
+       },
+       "operator": "=",
+       "value": 0
+      },
+      {
+       "column": {
+        "column_name": "captured_at",
+        "type": "column"
+       },
+       "operator": ">=",
+       "value": "2024-01-01"
+      },
+      {
+       "expression": {
+        "expression": "captured_at <= now()",
+        "type": "expression"
+       }
+      }
+     ],
+     "logical_operator": "And",
+     "type": "filter_group"
+    },
+    {
+     "filters": [
+      {
+       "expression": {
+        "expression": "captured_at < today()",
+        "type": "expression"
+       }
+      }
+     ],
+     "logical_operator": "And",
+     "type": "filter_group"
+    },
+    {
+     "dimensions": [
+      {
+       "column_name": "app",
+       "data_type": "String",
+       "dimension_name": "app"
+      },
+      {
+       "column_name": "captured_at",
+       "data_type": "Datetime",
+       "dimension_name": "date",
+       "granularity": "day"
+      }
+     ],
+     "measures": [
+      {
+       "aggregation": "count_distinct",
+       "column_name": "site",
+       "data_type": "Integer",
+       "measure_name": "sites"
+      }
+     ],
+     "type": "summarize"
+    }
+   ],
+   "sort_order": 2,
+   "title": "Heartbeat Sites per App per Day",
+   "use_live_connection": 0,
+   "workbook": "pulse"
+  },
+  "pulse-ingest-stats": {
+   "folder": null,
+   "is_builder_query": 1,
+   "is_native_query": 0,
+   "is_script_query": 0,
+   "name": "pulse-ingest-stats",
+   "operations": [
+    {
+     "table": {
+      "data_source": "Site DB",
+      "table_name": "tabPulse Ingest Stat",
+      "type": "table"
+     },
+     "type": "source"
+    },
+    {
+     "column_names": [
+      "hour",
+      "requests",
+      "failed_requests",
+      "retries",
+      "accepted",
+      "dropped",
+      "rejected",
+      "request_p95_ms",
+      "insert_p95_ms"
+     ],
+     "type": "select"
+    },
+    {
+     "data_type": "Integer",
+     "expression": {
+      "expression": "accepted + dropped + rejected",
+      "type": "expression"
+     },
+     "new_name": "received",
+     "type": "mutate"
+    }
+   ],
+   "sort_order": 0,
+   "title": "Ingest Stats",
+   "use_live_connection": 0,
+   "workbook": "pulse"
+  }
+ },
+ "title": "Pulse"
+}
