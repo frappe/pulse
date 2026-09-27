@@ -7,7 +7,9 @@ description = "A Frappe app to track user interactions with your product."
 requires-python = ">=3.14,<3.15"
 readme = "README.md"
 dynamic = ["version"]
-dependencies = []
+dependencies = [
+    "pyarrow",
+]
 
 [build-system]
 requires = ["flit_core >=3.4,<4"]
