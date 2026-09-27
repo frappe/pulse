@@ -1,6 +1,7 @@
 from datetime import timedelta
 
 import frappe
+from frappe.query_builder.functions import Min
 
 SITE_DB = "Site DB"
 EVENT_TABLE = "tabPulse Event"
@@ -41,7 +42,8 @@ def configure_table_imports():
 		table = frappe.get_doc("Insights Table v3", get_table_name(SITE_DB, name))
 		table.update({**settings, "sync_schedule": SYNC_SCHEDULE})
 		if name == EVENT_TABLE and not table.sync_from:
-			first = frappe.db.sql("select min(creation) from `tabPulse Event`")[0][0]
+			event = frappe.qb.DocType("Pulse Event")
+			first = frappe.qb.from_(event).select(Min(event.creation)).run()[0][0]
 			# the first import reads rows created after `sync_from`, so start just before the oldest
 			table.sync_from = (first or frappe.utils.now_datetime()) - timedelta(seconds=1)
 		table.save(ignore_permissions=True)
