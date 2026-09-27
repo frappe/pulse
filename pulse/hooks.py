@@ -87,8 +87,8 @@ add_to_apps_screen = [
 # ------------
 
 # before_install = "pulse.install.before_install"
-after_install = "pulse.tenancy.create_event_view"
-after_migrate = "pulse.tenancy.create_event_view"
+after_install = ["pulse.tenancy.create_event_view", "pulse.data_store.configure_table_imports"]
+after_migrate = ["pulse.tenancy.create_event_view", "pulse.data_store.configure_table_imports"]
 
 # Uninstallation
 # ------------
@@ -102,7 +102,7 @@ after_migrate = "pulse.tenancy.create_event_view"
 # Name of the app being installed is passed as an argument
 
 # before_app_install = "pulse.utils.before_app_install"
-# after_app_install = "pulse.utils.after_app_install"
+after_app_install = "pulse.data_store.after_app_install"
 
 # Integration Cleanup
 # -------------------
