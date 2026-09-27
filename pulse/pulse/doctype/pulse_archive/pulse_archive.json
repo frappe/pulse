@@ -1,0 +1,80 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "field:month",
+ "creation": "2026-09-27 12:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "month",
+  "status",
+  "column_break_file",
+  "row_count",
+  "file_path"
+ ],
+ "fields": [
+  {
+   "description": "Calendar month of the events' creation, as YYYY-MM.",
+   "fieldname": "month",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Month",
+   "read_only": 1,
+   "unique": 1
+  },
+  {
+   "description": "Exported: the file holds every event of the month, and the rows are still being deleted. Purged: the rows are gone from Pulse Event.",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Exported\nPurged",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_file",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "row_count",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Row Count",
+   "non_negative": 1,
+   "read_only": 1
+  },
+  {
+   "description": "Parquet file, relative to the site directory.",
+   "fieldname": "file_path",
+   "fieldtype": "Data",
+   "label": "File Path",
+   "read_only": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "in_create": 1,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-09-27 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Pulse",
+ "name": "Pulse Archive",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "month",
+ "sort_order": "DESC",
+ "states": []
+}
